@@ -185,6 +185,7 @@ SecurCam Viewer
 						$("#contentDiv").append("<img style='display: none;' id='"+(index)+"' src='pics/"+fname+"'>");
 						imgArray.push({date: parseDate(fname), filename: fname, seqNum: parseSeqNum(fname)});
 						//$(nimg).attr("src", "pics/"+fname);
+
 					}
 					//console.log(element);
 				});
@@ -194,7 +195,7 @@ SecurCam Viewer
 				fIndex = 0;
 				lIndex = imgArray.length
 				$("#indexNum").html("Loaded!  "+fIndex+" out of "+lIndex);
-				$("#name").html(parseDate(stripPath($("#"+i).attr("src"))).toString());
+				$("#name").html(parseDate(stripPath($("#1").attr("src"))).toString());
 				$("#"+fIndex).show();
 				$("#slider").slider({
 						min: fIndex,
