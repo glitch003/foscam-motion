@@ -1,0 +1,22 @@
+body{
+
+	background-color: #C8C8C8;
+	/*padding-bottom: 30px;	*/
+	
+}
+
+#content{
+	width: 98%;
+	margin-left: auto;
+	margin-right: auto;
+	text-align: center;
+	padding: 10px;
+	
+	
+}
+
+table.searchres td {
+	border-width: 1px;
+	border-style: solid;
+	border-color: gray;
+}

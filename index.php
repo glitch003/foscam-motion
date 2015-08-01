@@ -1,0 +1,337 @@
+<html>
+<head>
+<title>
+SecurCam Viewer
+</title>
+<link type="text/css" href="css/smoothness/jquery-ui-1.8.23.custom.css" rel="stylesheet" />
+<script type="text/javascript" src="js/jquery-1.8.0.min.js"></script>
+<script type="text/javascript" src="js/jquery-ui-1.8.23.custom.min.js"></script>
+
+<script type="text/javascript">
+
+	var fIndex = -1;
+	var i = -1;
+	var lIndex = -1;
+	
+	var playing = false;
+	var intervalId;
+	var playSpeed = 250;
+	
+	var imgArray = new Array();
+
+	function nextPic(){
+		$("#"+i).hide();
+		i++;
+		if(i > lIndex){
+			i = fIndex;
+		}
+		$("#"+i).show();
+		$("#indexNum").html(i+" out of "+lIndex);
+		$("#name").html(parseDate(stripPath($("#"+i).attr("src"))).toString());
+		$("#slider").slider("option","value", i);
+		
+	}
+	
+	function prevPic(){
+		
+		$("#"+i).hide();
+		i--;
+		if(i < fIndex){
+			i = lIndex;
+		}
+		$("#"+i).show();
+		$("#indexNum").html(i + " out of "+lIndex);
+		$("#name").html(parseDate(stripPath($("#"+i).attr("src"))).toString());	
+		$("#slider").slider("option","value", i);
+			
+	}
+	
+	function stripPath(path){
+			return path.indexOf("/") != -1 ? stripPath(path.substring(path.indexOf("/") + 1)) : path; 
+	}
+	
+	
+	function parseDate(fname){
+		var y = fname.substring(22,26);
+		var m = fname.substring(26, 28);
+		var d = fname.substring(28, 30);
+		var h = fname.substring(30, 32);
+		var mins = fname.substring(32, 34);
+		var s = fname.substring(34, 36);
+		
+		
+		
+		
+		
+		return new Date(y, m - 1, d, h, mins, s);
+		
+		
+	}
+	
+	function parseSeqNum(fname){
+		var seq = fname.substring(37, fname.indexOf(".", 37));
+		return seq;
+	}
+	
+	function showPic(num){
+		$("#"+i).hide();
+		i = num;
+		if(i > lIndex){
+			i = fIndex;
+		}
+		$("#"+i).show();
+		$("#indexNum").html(i+" out of "+lIndex);
+		$("#name").html(parseDate(stripPath($("#"+i).attr("src"))).toString());
+	}
+	
+	function showPicsFromDate(date){
+		console.log(date.getDate());
+		
+		$("#contentDiv").html("Loading<br><img src='loading.gif'/>");
+		
+		var index = 0;
+		var imageCode = "";
+		
+		for(var ind = 0; ind < imgArray.length; ind++){
+				if(imgArray[ind].date.getDate() == date.getDate()){
+					if(index == 0){
+						imageCode += "<img style='' id='"+index+"' src='pics/"+imgArray[ind].filename+"'>";
+						$("#name").html(imgArray[ind].date.toString());
+					}else{
+						imageCode += "<img style='display: none;' id='"+index+"' src='pics/"+imgArray[ind].filename+"'>";
+					}
+					index++;
+				}
+			
+		}
+		
+		$("#contentDiv").html(imageCode);
+		
+		fIndex = 0;
+		i = 0;
+		lIndex = index - 1;
+		
+		$("#indexNum").html(i + " out of "+lIndex);
+		$("#slider").slider({
+						min: fIndex,
+						max: lIndex,
+						step: 1,
+						value: 0,
+						slide: function(evt, ui){
+							
+							showPic(ui.value);
+						}
+					}
+				);
+		
+		
+		
+
+		
+	}
+	
+	function playOrPause(){
+		if(playing == false){
+				intervalId = setInterval("nextPic();", playSpeed);
+				
+				playing = true;
+			}else{
+				clearInterval(intervalId);
+				playing = false;
+				
+			}
+			$("#status").html(playing?"Playing":"Paused");
+	}
+
+
+	function speedUp(){
+		if(playing){
+			playOrPause();
+			playSpeed -= 5;
+			playOrPause();	
+		}else{
+			playSpeed -= 5;
+		}
+		$("#speed").val(playSpeed);
+	}
+		
+		
+	function slowDown(){
+		if(playing){
+			playOrPause();
+			playSpeed += 5;
+			playOrPause();	
+		}else{
+			playSpeed += 5;
+		}
+		$("#speed").val(playSpeed);
+	}	
+
+	$(document).ready(function(){
+		
+		$.ajax("pics/", {
+			success: function(data){
+				$("#hiddenDiv").html(data);
+				
+				var appendMe = "";
+				
+				$("#hiddenDiv a").each(function(index, element){
+					var fname = $(element).attr("href");
+					if(fname.indexOf(".jpg") != -1){
+						//console.log("index: "+index+", element: "+fname);
+						
+						if(fIndex == -1){
+							fIndex = index - 5;
+							i = fIndex;
+						}
+						
+				
+						
+						//appendMe += 
+						$("#contentDiv").append("<img style='display: none;' id='"+(index-5)+"' src='pics/"+fname+"'>");
+						imgArray.push({date: parseDate(fname), filename: fname, seqNum: parseSeqNum(fname)});
+						lIndex = index-5;
+						//$(nimg).attr("src", "pics/"+fname);
+					}
+					//console.log(element);
+				});
+				
+				//$("#contentDiv").append(appendMe);
+				
+				$("#indexNum").html("Loaded!  "+fIndex+" out of "+lIndex);
+				$("#name").html(parseDate(stripPath($("#"+i).attr("src"))).toString());
+				$("#"+fIndex).show();
+				$("#slider").slider({
+						min: fIndex,
+						max: lIndex,
+						step: 1,
+						slide: function(evt, ui){
+							showPic(ui.value);
+						}
+					}
+				);
+				console.log(imgArray);
+			}
+			
+			
+			
+			
+			
+		});
+		
+		$("#nextPic").button();
+		$("#prevPic").button();
+		$("#play").button();
+		
+		$(document).keydown(function(e){
+			//console.log(e);
+			
+			if(e.which == 39){
+				//right arrow
+				e.preventDefault();	
+				nextPic();
+				return false;
+			}else if(e.which == 37){
+				//left arrow
+				e.preventDefault();	
+				prevPic();
+				return false;
+			}else if(e.which == 32){
+				//spacebar
+				e.preventDefault();	
+				playOrPause();
+				return false;
+			}else if(e.which == 40){
+				//down arrow
+				e.preventDefault();	
+				slowDown();
+				return false;
+			}else if(e.which == 38){
+				//up arrow
+				e.preventDefault();	
+				speedUp();
+				return false;
+				
+			}
+			return true;
+		});
+		
+		$("#nextPic").click(function(){
+			nextPic();
+			
+		});
+		
+		$("#prevPic").click(function(){
+			prevPic();
+			
+		});
+		
+		
+		$("#play").click(function(){
+			
+			playOrPause();
+		
+		});
+		
+		$("#datepicker").datepicker({
+			onSelect: function(dateText, inst){
+				console.log("datetext: "+dateText);
+				
+				console.log(dateText.substring(3, 5));
+				//09/03/2012
+				var picDate = new Date(dateText.substring(6, 10), dateText.substring(0, 2), dateText.substring(3,5));
+				
+				showPicsFromDate(picDate);
+			}
+		});
+		
+		$("#speed").keydown(function(evt){
+			//console.log($("#speed").val());
+			playSpeed = $(this).val();
+			
+			
+			
+		});
+		
+		
+		
+	});
+</script>
+
+
+</head>
+<body style="text-align: center;">
+<div id="holder" style="width: 810px; margin-left: auto; margin-right: auto;">
+    <span id="indexNum" style="float: left;">Loading<br><img src="loading.gif"/></span>
+    <span id="status" style="float: right;"></span>
+    <div style="clear: both;"></div>
+    <div id="slider" style="width: 640px; margin: auto;"></div>
+    <div id="contentDiv">
+    
+    </div>
+    <span id="name" style="font-size: 18px;"></span>
+    <span id="buttons">
+        
+        <input type="button" id="prevPic" value="Previous" />
+        <input type="button" id="nextPic" value="Next" />
+        <input type="button" id="play" value="Play/Pause" />
+        
+        <span id="datepicker" style="float: left;"></span>
+        <span style="float: right;">
+        	Play speed: 
+        	<input id="speed" type="text" value="250"/> (ms)
+        </span>
+    </span>
+</div>
+    
+
+<div id="hiddenDiv" style="display: none;">
+
+</div>
+
+
+
+
+
+</body>
+</html>
